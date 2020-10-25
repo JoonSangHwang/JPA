@@ -10,12 +10,19 @@ devtools:
 
 
 # Database
-spring:
-  datasource:
-    driver-class-name: oracle.jdbc.OracleDriver
-    url: jdbc:oracle:thin:@toy.cwbdh2iaymjm.us-east-2.rds.amazonaws.com:1521/ORCL
-    username: admin
-    password: 12345678
+  spring:
+    datasource:
+#      Oracle Database
+#      driver-class-name: oracle.jdbc.OracleDriver
+#      url: jdbc:oracle:thin:@toy.cwbdh2iaymjm.us-east-2.rds.amazonaws.com:1521/ORCL
+#      username: admin
+#      password: 12345678
+
+#      H2 Database
+      driver-class-name: org.h2.Driver
+      url: jdbc:h2:tcp://localhost/~/datajpa
+      username: sa
+      password:
 
   jpa:
     hibernate:
