@@ -1,0 +1,28 @@
+#port
+server:
+  port: 8015
+
+
+#reload
+devtools:
+  livereload:
+    enabled: true
+
+
+# Database
+spring:
+  datasource:
+    driver-class-name: oracle.jdbc.OracleDriver
+    url: jdbc:oracle:thin:@toy.cwbdh2iaymjm.us-east-2.rds.amazonaws.com:1521/ORCL
+    username: admin
+    password: 12345678
+
+  jpa:
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        format_sql: true
+
+  logging.level:
+    org.hibernate.SQL: debug
