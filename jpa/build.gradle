@@ -31,6 +31,9 @@ dependencies {
 	// H2 Database
 	runtimeOnly 'com.h2database:h2'
 
+	// Dev tool
+	compileOnly("org.springframework.boot:spring-boot-devtools")
+
 	annotationProcessor 'org.projectlombok:lombok'
 	providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
 	testImplementation('org.springframework.boot:spring-boot-starter-test') {

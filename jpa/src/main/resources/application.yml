@@ -1,28 +1,38 @@
-#port
+#server
 server:
   port: 8015
 
 
-#reload
-devtools:
-  livereload:
-    enabled: true
-
-
 # Database
-  spring:
-    datasource:
-#      Oracle Database
-#      driver-class-name: oracle.jdbc.OracleDriver
-#      url: jdbc:oracle:thin:@toy.cwbdh2iaymjm.us-east-2.rds.amazonaws.com:1521/ORCL
-#      username: admin
-#      password: 12345678
+spring:
+  datasource:
+#   Oracle Database
+#   driver-class-name: oracle.jdbc.OracleDriver
+#   url: jdbc:oracle:thin:@toy.cwbdh2iaymjm.us-east-2.rds.amazonaws.com:1521/ORCL
+#   username: admin
+#   password: 12345678
 
-#      H2 Database
-      driver-class-name: org.h2.Driver
-      url: jdbc:h2:tcp://localhost/~/datajpa
-      username: sa
-      password:
+    # H2 Database
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:tcp://localhost/~/datajpa
+    username: sa
+    password:
+
+
+    # DEVTOOLS (DevToolsProperties)
+    devtools:
+      livereload:
+        enabled: true
+        port: 8015
+compiler:
+  automake:
+    allow:
+      when:
+        app: running
+ide:
+  windowSystem: autoShowProcessPopup
+
+
 
   jpa:
     hibernate:
@@ -33,3 +43,5 @@ devtools:
 
   logging.level:
     org.hibernate.SQL: debug
+
+
