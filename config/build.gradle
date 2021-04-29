@@ -4,7 +4,7 @@ plugins {
 	id 'java'
 }
 
-group = 'com.junsang.eureka'
+group = 'com.junsang.config'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '1.8'
 
@@ -20,14 +20,11 @@ dependencies {
 	// Web
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 
-	// Eureka Server
-	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-server'
+	// Cloud Config Server
+	implementation 'org.springframework.cloud:spring-cloud-config-server'
 
-	// Eureka Client
-	implementation 'org.springframework.cloud:spring-cloud-config-client'
-
-	// Actuator (Refresh 기능)
-	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	// Jsaypt
+	compile "com.github.ulisesbocchio:jasypt-spring-boot-starter:1.17"
 
 	// Bootstrap
 	implementation 'org.springframework.cloud:spring-cloud-starter-bootstrap'
