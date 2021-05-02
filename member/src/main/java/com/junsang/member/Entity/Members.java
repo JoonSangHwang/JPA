@@ -1,4 +1,4 @@
-package com.junsang.member.member.domain;
+package com.junsang.member.Entity;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;

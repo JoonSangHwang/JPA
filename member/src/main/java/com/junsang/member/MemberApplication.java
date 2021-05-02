@@ -1,4 +1,4 @@
-package com.junsang.member.member;
+package com.junsang.member;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
