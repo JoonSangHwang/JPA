@@ -1,4 +1,4 @@
-package com.junsang.config.config;
+package com.junsang.config;
 
 import com.ulisesbocchio.jasyptspringboot.annotation.EnableEncryptableProperties;
 import org.springframework.boot.SpringApplication;

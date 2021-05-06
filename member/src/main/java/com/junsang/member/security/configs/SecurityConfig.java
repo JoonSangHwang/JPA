@@ -13,7 +13,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http
                 .authorizeRequests()
-                .antMatchers("/**").permitAll();
+                .antMatchers("/").permitAll()                   // [페이지] index
+                .antMatchers("/mainPage").permitAll()           // [페이지] 메인
+                .antMatchers("/loginPage").permitAll()          // [페이지] 로그인
+
+        ;
     }
 
 }
