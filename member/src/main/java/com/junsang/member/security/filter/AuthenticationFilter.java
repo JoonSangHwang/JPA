@@ -5,6 +5,7 @@ import com.junsang.member.dto.ReqLogin;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import javax.servlet.FilterChain;
@@ -26,12 +27,17 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
             // 사용자의 입력값
             ReqLogin requestLogin = new ObjectMapper().readValue(request.getInputStream(), ReqLogin.class);
 
-            // 토큰 생성
-            UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken
-                    = new UsernamePasswordAuthenticationToken(requestLogin.getEmail(), requestLogin.getPassword(), new ArrayList<>());
+            // [인증 전] 토큰 생성
+            UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(
+                            requestLogin.getEmail()             // principal   - 이메일
+                            , requestLogin.getPassword()        // credentials - 패스워드
+                            , new ArrayList<>());
 
-            // 토큰을 매니저에게 인증 위임
-            return getAuthenticationManager().authenticate(usernamePasswordAuthenticationToken);
+            // [인증 전] 토큰을 매니저에게 인증 위임
+            Authentication auth = getAuthenticationManager().authenticate(usernamePasswordAuthenticationToken);
+
+            // 인증이 정상적으로 호출 될 경우, auth 반환
+            return auth;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -40,8 +46,6 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authResult) throws IOException, ServletException {
 
-
-//        String userName = ((org.springframework.security.core.userdetails.User)authResult.getPrincipal()).getUsername();
 //        UserDto userDetails = userService.getUserDetailsByEmail(userName);
 //
 //        String token = Jwts.builder()
@@ -53,6 +57,6 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 //        response.addHeader("token", token);
 //        response.addHeader("userId", userDetails.getUserId());
 //
-//        super.successfulAuthentication(request, response, chain, authResult);
+        super.successfulAuthentication(request, response, chain, authResult);
     }
 }

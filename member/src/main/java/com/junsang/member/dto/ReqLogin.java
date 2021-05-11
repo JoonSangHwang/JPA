@@ -14,7 +14,6 @@ public class ReqLogin {
     @Email
     private String email;
 
-
     @NotNull(message = "Password cannot be null")
     @Size(min = 8, message = "Email not be less than 8 characters")
     private String password;
