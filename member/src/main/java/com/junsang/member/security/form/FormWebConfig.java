@@ -1,7 +1,6 @@
-package com.junsang.member.security.configs;
+package com.junsang.member.security.form;
 
-import com.junsang.member.security.provider.CustomProvider;
-import org.springframework.beans.factory.annotation.Qualifier;
+import com.junsang.member.security.form.FormProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -13,15 +12,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Component
-public class Configs {
+public class FormWebConfig {
 
     /**
      * Bean AuthenticationProvider
      */
     @Bean
-    @Qualifier("customProvider")
-    public AuthenticationProvider customProvider() {
-        return new CustomProvider(passwordEncoder());
+    public AuthenticationProvider formProvider() {
+        return new FormProvider(passwordEncoder());
     }
 
 

@@ -1,11 +1,10 @@
-package com.junsang.member.security.filter;
+package com.junsang.member.security.form;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.junsang.member.dto.ReqLogin;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import javax.servlet.FilterChain;
@@ -14,11 +13,14 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Date;
 
-public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
+public class FromFilter extends UsernamePasswordAuthenticationFilter {
 
     private ObjectMapper objectMapper = new ObjectMapper();
+
+    public FromFilter() {
+//        super("/api/login");     // 요청 정보가 URL 과 매칭 되면 필터 발동 (1/2)
+    }
 
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {

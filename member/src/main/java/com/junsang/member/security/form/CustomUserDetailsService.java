@@ -1,4 +1,4 @@
-package com.junsang.member.security.service;
+package com.junsang.member.security.form;
 
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

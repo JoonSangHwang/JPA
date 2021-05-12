@@ -1,10 +1,9 @@
-package com.junsang.member.security.service;
+package com.junsang.member.security.form;
 
-import com.junsang.member.dto.ReqLogin;
 import com.junsang.member.dto.ResLogin;
-import com.junsang.member.entity.Members;
 import com.junsang.member.exception.UserIdNotFoundException;
 import com.junsang.member.repository.MemberRepository;
+import com.junsang.member.security.form.CustomUserDetailsService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.User;
@@ -13,7 +12,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.List;
 
 @Service
 public class CustomUserDetailsServiceImpl implements CustomUserDetailsService {

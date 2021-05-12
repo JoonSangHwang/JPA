@@ -1,4 +1,4 @@
-package com.junsang.member.security.provider;
+package com.junsang.member.security.form;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -11,18 +11,17 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-public class CustomProvider implements AuthenticationProvider {
+public class FormProvider implements AuthenticationProvider {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Autowired
-//    @Qualifier("customUserDetailsService")
     private UserDetailsService customUserDetailsService;
 
 
 
-    public CustomProvider(PasswordEncoder passwordEncoder) {
+    public FormProvider(PasswordEncoder passwordEncoder) {
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -57,13 +56,15 @@ public class CustomProvider implements AuthenticationProvider {
 
 
 
-        // [인증 완료] 토큰 생성
+        //== [S] 인증 완료
+
+        // 토큰 생성
         UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(
                 user.getUsername(),             // 이메일
-                null,                  // 패스 워드
+                null,                 // 패스 워드
                 user.getAuthorities());         // 권한정보
 
-        // [인증 완료] 토큰 반환
+        // 토큰 반환
         return usernamePasswordAuthenticationToken;
     }
 
