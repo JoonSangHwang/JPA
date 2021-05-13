@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface MemberRepository extends JpaRepository<Members, Long> {
@@ -19,4 +20,9 @@ public interface MemberRepository extends JpaRepository<Members, Long> {
             "FROM   Members m                              " +
             "WHERE  m.email= :email                        " )
     ResLogin selectUser(@Param("email") String email);
+
+    @Query("SELECT  COUNT(m)                              " +
+            "FROM   Members m                              " +
+            "WHERE  m.email= :email                        " )
+    long selectUserCount(@Param("email") String email);
 }

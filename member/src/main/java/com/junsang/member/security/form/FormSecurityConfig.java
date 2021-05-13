@@ -2,6 +2,7 @@ package com.junsang.member.security.form;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -10,6 +11,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 
 @Configuration
 @EnableWebSecurity      // 시큐리티 활성화
+@Order(10)
 public class FormSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired
@@ -28,6 +30,7 @@ public class FormSecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/", "/oauth2/**", "/login/**", "/css/**", "/images/**", "/js/**", "/console/**").permitAll();
 
         http
+                // HttpServletRequest 를 사용하는 요청들에 대한 접근 제한 설정
                 .authorizeRequests()                                      // 요청에 의한 보안검사 시작
                 .antMatchers("/").permitAll()                   // [페이지] index
                 .antMatchers("/mainPage").permitAll()           // [페이지] 메인
@@ -37,8 +40,12 @@ public class FormSecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/signUp").permitAll()
 
                 .antMatchers("/loginRequest").permitAll()
-                .and()
+        ;
 
+        http
+                .antMatcher("/login")
+                .authorizeRequests().anyRequest().authenticated()
+        .and()
                 .addFilter(getAuthenticationFilter())
 
 

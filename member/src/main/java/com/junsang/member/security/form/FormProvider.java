@@ -46,7 +46,7 @@ public class FormProvider implements AuthenticationProvider {
 
 
         //== [S] 인증 로직
-        User user = (User) customUserDetailsService.loadUserByUsername(email);
+         User user = (User) customUserDetailsService.loadUserByUsername(email);
         System.out.println();
 
         if (!passwordEncoder.matches(password, user.getPassword())) {

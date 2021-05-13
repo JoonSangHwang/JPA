@@ -15,7 +15,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
-@Order(0)
+@Order(20)
 public class AjaxSecurityConfig extends WebSecurityConfigurerAdapter {
 
 
@@ -31,16 +31,18 @@ public class AjaxSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http
-                .antMatcher("/api/**").authorizeRequests()
-                .anyRequest().authenticated()
+//        http
+//                .antMatcher().authorizeRequests()
+//                .anyRequest().authenticated()
+//        .and()
+//                .addFilterBefore(ajaxProcessingFilter(), UsernamePasswordAuthenticationFilter.class)
+//        ;
 
+        http
+                .antMatcher("/api/login")
+                .authorizeRequests().anyRequest().authenticated()
         .and()
-                .addFilterBefore(ajaxProcessingFilter(), UsernamePasswordAuthenticationFilter.class)
-        ;
-
-        http
-                .csrf().disable();
+                .addFilterBefore(ajaxProcessingFilter(), UsernamePasswordAuthenticationFilter.class);
     }
 
     /**
