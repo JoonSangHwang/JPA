@@ -39,17 +39,17 @@ public class JwtProvider implements InitializingBean {
     /**
      * InitializingBean 클래스의 afterPropertiesSet() 메소드 오버라이딩
      *
-     * -> 객체 초기화, secretKey 를 Base64로 인코딩한다.
+     * -> secretKey 를 Base64로 인코딩
+     * -> Key 값 초기화를 위해 afterPropertiesSet() 사용
      *
-     * -> 디코딩한 Key 값을 변수 할당하기 위하여 afterPropertiesSet() 사용
+     * -> JWT 는 Claim 을 Json 형태로 표현한 것으로, Claim Json 문자열이 BASE64 인코딩을 통해 요청을 할 수 있다.
+     *    암호를 풀기 위해 secretKey 역시 BASE64 로 인코딩 해준다.
+     * -> BASE64(HS512암호화(lowSig))
      */
     @Override
     public void afterPropertiesSet() throws Exception {
         byte[] keyBytes = Decoders.BASE64.decode(jwtTokenSecret);
-        this.key = Keys.hmacShaKeyFor(keyBytes);
-//        this.key = Keys.hmacShaKeyFor(jwtTokenSecret.getBytes());
-        System.out.println();
-//        kkkkey = Base64.getEncoder().encodeToString(jwtTokenSecret.getBytes());
+        this.key = Keys.hmacShaKeyFor(keyBytes);        // 무결성을 위해 HMAC 사용
     }
 
 
@@ -61,8 +61,12 @@ public class JwtProvider implements InitializingBean {
 
         String email = (String) auth.getName();
         String token = Jwts.builder()
-                .setSubject(email)
+                .setSubject("토큰 제목")
+                .setIssuer("토큰 발급자")
+                .setAudience("토큰 대상자")                                // 토큰 대상자
                 .setExpiration(new Date(System.currentTimeMillis() + Long.parseLong(jwtTokenExpirationTime)))
+                .setNotBefore(new Date(System.currentTimeMillis()))      // 토큰 활성 시간
+                .setIssuedAt(new Date(System.currentTimeMillis()))      // 토큰 발급 시간
                 .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
 

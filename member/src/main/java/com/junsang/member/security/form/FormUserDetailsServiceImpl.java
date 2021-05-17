@@ -3,6 +3,7 @@ package com.junsang.member.security.form;
 import com.junsang.member.dto.ResLogin;
 import com.junsang.member.exception.UserIdNotFoundException;
 import com.junsang.member.repository.MemberRepository;
+import com.junsang.member.security.CustomUSer;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.User;
@@ -37,11 +38,11 @@ public class FormUserDetailsServiceImpl implements FormUserDetailsService {
 
         User user = new User( userInfo.getEmail()
                             , userInfo.getPassword()
-                            , true
-                            , true
-                            , true
-                            , true
-                            , new ArrayList<>());
+                            , true                  // 사용자가 활성화 된 경우 true
+                            , true          // 계정이 만료되지 않은 경우 true
+                            , true        // 자격 증명이 만료되지 않은 경우 true
+                            , true          // 계정이 잠겨 있지 않은 경우 true
+                            , new ArrayList<>());         // 권한
         return user;
     }
 }
