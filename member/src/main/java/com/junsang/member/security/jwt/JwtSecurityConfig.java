@@ -3,7 +3,6 @@ package com.junsang.member.security.jwt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -47,24 +46,15 @@ public class JwtSecurityConfig extends WebSecurityConfigurerAdapter {
         http.httpBasic().disable();
         
         http
-//                .exceptionHandling()
-//                .authenticationEntryPoint(jwtAuthEntryPoint)
-//                .accessDeniedHandler(jwtAccessDeniedHandler)
+                // Exception Handling
+                .exceptionHandling()
+                .authenticationEntryPoint(jwtAuthEntryPoint)
+                .accessDeniedHandler(jwtAccessDeniedHandler)
 
-                // 세션을 사용하지 않기 떄문에, 세션 삭제
-//        .and()
+                // Session Remove
+        .and()
                 .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                
-//        .and()
-//                // HttpServletRequest 를 사용하는 요청들에 대한 접근 제한 설정
-//                .authorizeRequests()
-//                .antMatchers("/api/hello").permitAll()
-//                .antMatchers("/api/authenticate").permitAll()
-//                .antMatchers("/api/signup").permitAll()
-//                .anyRequest().authenticated()
-//        .and()
-//                .addFilterBefore(getJwtFilter(), UsernamePasswordAuthenticationFilter.class)
         ;
 
         http
@@ -73,7 +63,8 @@ public class JwtSecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/ipa/jwtLogin").permitAll()
                 .anyRequest().authenticated()
         .and()
-                .addFilterBefore(new JwtCheckFilter(jwtProvider), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new JwtFilter(jwtProvider), UsernamePasswordAuthenticationFilter.class)
+
         ;
     }
 
