@@ -6,6 +6,7 @@ import io.jsonwebtoken.UnsupportedJwtException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
@@ -46,7 +47,7 @@ public class JwtFilter extends OncePerRequestFilter {
     public JwtFilter(JwtProvider jwtProvider) {
         this.jwtProvider = jwtProvider;
     }
-
+    @CachePut( )
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         HttpServletRequest httpServletRequest = (HttpServletRequest) request;
@@ -59,12 +60,28 @@ public class JwtFilter extends OncePerRequestFilter {
         String refreshToken = resolveRefreshToken(httpServletRequest);
 
 
-
         /** Access Token & Refresh Token 유효성 검사 **/
 
         // Access Token [Y]  ||  Refresh Token [Y]
         if (StringUtils.hasText(accessToken) ) {
-//            && jwtProvider.validateToken(accessToken)
+            String exceptionYn = jwtProvider.validateToken(accessToken);
+            switch(exceptionYn) {
+                case "INVALID_TOKEN" :
+                    request.setAttribute("exception", ErrorCode.INVALID_TOKEN.getCode());
+                    break;
+                case "EXPIRED_TOKEN" :
+                    request.setAttribute("exception", ErrorCode.EXPIRED_TOKEN.getCode());
+                    break;
+                case "UNSUPRT_TOKEN" :
+                    request.setAttribute("exception", ErrorCode.UNSUPRT_TOKEN.getCode());
+                    break;
+                case "ILLEGAL_TOKEN" :
+                    request.setAttribute("exception", ErrorCode.ILLEGAL_TOKEN.getCode());
+                    break;
+                case "EXCPTIN_TOKEN" :
+                    request.setAttribute("exception", ErrorCode.EXCPTIN_TOKEN.getCode());
+                    break;
+            }
 
 
             // 토큰에서 유저 정보를 가져와 Auth 객체를 만듬
@@ -78,24 +95,34 @@ public class JwtFilter extends OncePerRequestFilter {
         // Access Token [N]  ||  Refresh Token [Y]
         else if (StringUtils.hasText(refreshToken) ) {
 
-            try {
-                jwtProvider.validateToken(refreshToken);
-            } catch (SecurityException | MalformedJwtException e) {
-                logger.debug("잘못된 JWT 서명 입니다.");
-                request.setAttribute("exception", ErrorCode.INVALID_TOKEN.getCode());
-            } catch (ExpiredJwtException e) {
-                logger.debug("만료된 JWT 토큰 입니다.");
-                request.setAttribute("exception", ErrorCode.EXPIRED_TOKEN.getCode());
-            } catch (UnsupportedJwtException e) {
-                logger.debug("지원되지 않는 JWT 서명 입니다.");
-                request.setAttribute("exception", ErrorCode.UNSUPRT_TOKEN.getCode());
-            } catch (IllegalArgumentException e) {
-                logger.debug("JWT 토큰이 잘 못 되었습니다.");
-                request.setAttribute("exception", ErrorCode.ILLEGAL_TOKEN.getCode());
-            } catch (Exception e) {
-                logger.debug("JWT 오류 입니다.");
-                request.setAttribute("exception", ErrorCode.EXCPTIN_TOKEN.getCode());
-            }
+            // 만료 기간 체크
+            // 만료 X -> valid
+            // 재발급 go
+
+
+            // 만료기간 체크
+            // 만료 O
+            // 재발급 go
+
+
+//            String exceptionYn = jwtProvider.validateToken(refreshToken);
+//            switch(exceptionYn) {
+//                case "INVALID_TOKEN" :
+//                    request.setAttribute("exception", ErrorCode.INVALID_TOKEN.getCode());
+//                    break;
+//                case "EXPIRED_TOKEN" :
+//                    request.setAttribute("exception", ErrorCode.EXPIRED_TOKEN.getCode());
+//                    break;
+//                case "UNSUPRT_TOKEN" :
+//                    request.setAttribute("exception", ErrorCode.UNSUPRT_TOKEN.getCode());
+//                    break;
+//                case "ILLEGAL_TOKEN" :
+//                    request.setAttribute("exception", ErrorCode.ILLEGAL_TOKEN.getCode());
+//                    break;
+//                case "EXCPTIN_TOKEN" :
+//                    request.setAttribute("exception", ErrorCode.EXCPTIN_TOKEN.getCode());
+//                    break;
+//            }
 
 
             // Custom Exception 은 Spring 영역, Filter 는 DispatcherServlet 이전 영역의 예외처리
@@ -106,19 +133,6 @@ public class JwtFilter extends OncePerRequestFilter {
         else {
             logger.debug("유효한 JWT 토큰이 없습니다. URI: {} '", requestURI);
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
         filterChain.doFilter(request, response);
     }

@@ -28,8 +28,6 @@ public class JwtSecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     private AuthenticationSuccessHandler jwtSuccessHandler;
 
-
-
     private JwtProvider jwtProvider;
 
     public JwtSecurityConfig(JwtProvider jwtProvider) {
@@ -55,16 +53,15 @@ public class JwtSecurityConfig extends WebSecurityConfigurerAdapter {
         .and()
                 .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-        ;
 
-        http
+                // Authenticate Config
+        .and()
                 .authorizeRequests()
                 .antMatchers("/ipa/hello").permitAll()
                 .antMatchers("/ipa/jwtLogin").permitAll()
                 .anyRequest().authenticated()
         .and()
                 .addFilterBefore(new JwtFilter(jwtProvider), UsernamePasswordAuthenticationFilter.class)
-
         ;
     }
 

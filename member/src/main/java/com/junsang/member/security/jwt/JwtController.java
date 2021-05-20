@@ -11,6 +11,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -41,17 +42,17 @@ public class JwtController {
 
 
     @PostMapping("/ipa/jwtLogin")
-    public ResponseEntity<JwtTokenDto> authorize(@RequestBody ReqLogin reqLogin, HttpServletRequest request) {
+    public ResponseEntity<JwtTokenDto> authorize(@RequestBody ReqLogin reqLogin) {
 
 
-        Authentication objBeforeAuth = SecurityContextHolder.getContext().getAuthentication();
-
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         HttpHeaders httpHeaders = new HttpHeaders();
 
         // JWT 토큰 O
-        if (objBeforeAuth != null) {
-            logger.debug("[JS LOG] Security Context 에 인증 정보가 저장되어 있습니다.");
+        if (principal instanceof UserDetails) {
+            String username = ((UserDetails)principal).getUsername();
+            logger.debug("[JS LOG] Security Context 에 인증 정보가 저장되어 있습니다. {}", username);
 
             return new ResponseEntity<>(new JwtTokenDto("", ""), httpHeaders, HttpStatus.OK);
         }
@@ -59,7 +60,8 @@ public class JwtController {
 
         // JWT 토큰 X
         else {
-            logger.debug("[JS LOG] Security Context 에 인증 정보가 없습니다.");
+            String username = principal.toString();
+            logger.debug("[JS LOG] Security Context 에 인증 정보가 없습니다. {}", username);
 
             // 토큰 생성
             UsernamePasswordAuthenticationToken tokenBeforeAuth = new UsernamePasswordAuthenticationToken(

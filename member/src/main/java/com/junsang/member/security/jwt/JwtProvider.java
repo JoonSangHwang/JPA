@@ -61,28 +61,29 @@ public class JwtProvider implements InitializingBean {
      */
     public String createToken(Authentication auth) {
         Map<String, Object> headers = new HashMap<>();
-        headers.put("hd", "Test Header");
+        headers.put("js_header", "JS Header");
 
         Map<String, Object> payloads = new HashMap<>();
-        payloads.put("email", "gufrus@naver.com");
-        payloads.put("password", "1234");
+        payloads.put("email", auth.getName());
+//        payloads.put("password", "1234");
 
+        String subject  = "용도는 인증";
+        String issuer   = "발급자는 준상";
+        String audience = "대상자는 미정";
 
-
-        String email = (String) auth.getName();
-        String token = Jwts.builder()
-                .setHeader(headers)     // Headers 설정
-                .setSubject("Test Subject")     // 토큰 용도
-                .setClaims(payloads)    // Claims 설정
-                .setIssuer("토큰 발급자")
-                .setAudience("토큰 대상자")                                // 토큰 대상자
+        // 토큰 생성
+        return Jwts
+                .builder()
+                .setHeader(headers)             // Headers 설정
+                .setClaims(payloads)            // Claims 설정
+                .setSubject(subject)
+                .setIssuer(issuer)
+                .setAudience(audience)
                 .setExpiration(new Date(System.currentTimeMillis() + Long.parseLong(jwtTokenExpirationTime)))
-                .setNotBefore(new Date(System.currentTimeMillis()))      // 토큰 활성 시간
+                .setNotBefore(new Date(System.currentTimeMillis()))     // 토큰 활성 시간
                 .setIssuedAt(new Date(System.currentTimeMillis()))      // 토큰 발급 시간
                 .signWith(key, SignatureAlgorithm.HS512)                // HS512와 Key 로 Sign 서명
                 .compact();                                             // 토큰 생성
-
-        return token;
     }
 
     /**
@@ -106,40 +107,36 @@ public class JwtProvider implements InitializingBean {
     /**
      * Token 유효성 검증
      */
-    public boolean validateToken(String token) throws Exception {
-        try {
-            Jwts
-                    .parserBuilder()
-                    .setSigningKey(key)
-                    .build()
-                    .parseClaimsJws(token);     // 파싱 및 검증, 실패 시 에러
-            return true;
-        } catch (Exception e) {
-            logger.debug("JWT 오류 입니다.");
-        }
-        return false;
-    }
+    public String validateToken(String token) {
+        String result = "";
 
-    public boolean validToken(String token) {
         try {
             Jwts
                     .parserBuilder()
                     .setSigningKey(key)
                     .build()
                     .parseClaimsJws(token);     // 파싱 및 검증, 실패 시 에러
-            return true;
+            return result;
         } catch (SecurityException | MalformedJwtException e) {
             logger.debug("잘못된 JWT 서명 입니다.");
+            result = "INVALID_TOKEN";
         } catch (ExpiredJwtException e) {
             logger.debug("만료된 JWT 토큰 입니다.");
+            result = "EXPIRED_TOKEN";
         } catch (UnsupportedJwtException e) {
             logger.debug("지원되지 않는 JWT 서명 입니다.");
+            result = "UNSUPRT_TOKEN";
         } catch (IllegalArgumentException e) {
             logger.debug("JWT 토큰이 잘 못 되었습니다.");
+            result = "ILLEGAL_TOKEN";
         }
-        return false;
-    }
+//        catch (Exception e) {
+//            logger.debug("JWT 오류 입니다.");
+//            result = "EXCPTIN_TOKEN";
+//        }
 
+        return result;
+    }
 
     // 토큰의 유효성 + 만료일자 확인
     public boolean getTokenExpiration(String jwtToken) {
