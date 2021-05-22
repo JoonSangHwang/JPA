@@ -32,7 +32,10 @@ public class JwtProvider implements InitializingBean {
     private String jwtTokenSecret;
 
     private Key key;
-    private String kkkkey;
+
+    private final int standardTimeForReissuanceOfAccessToken = 10;
+    private final int standardTimeForReissuanceOfRefreshToken = 10;
+
 
 
 
@@ -170,5 +173,31 @@ public class JwtProvider implements InitializingBean {
                 .getBody();
     }
 
+
+    /**
+     * Access Token 의 만료 일자를 보고 재발급 해주어야 하는지 체크
+     *
+     * @return  true  재발급 받아야함
+     */
+    public boolean checkTokenReissuanceYN(String accessToken) {
+        Claims contents = Jwts
+                .parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(accessToken)
+                .getBody();
+
+        Date curTime = new Date(System.currentTimeMillis());
+        Date curExpirationTime = contents.getExpiration();
+
+        long diff = curExpirationTime.getTime() - curTime.getTime();
+        long min = diff / (1000 * 60);  // 분으로 계산
+
+        // 10분 이하
+        if (standardTimeForReissuanceOfAccessToken <= min)
+            return false;
+
+        return true;
+    }
 
 }
