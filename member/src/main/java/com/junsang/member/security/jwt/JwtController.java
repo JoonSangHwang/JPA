@@ -44,7 +44,6 @@ public class JwtController {
     @PostMapping("/ipa/jwtLogin")
     public ResponseEntity<JwtTokenDto> authorize(@RequestBody ReqLogin reqLogin) {
 
-
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         HttpHeaders httpHeaders = new HttpHeaders();
@@ -75,13 +74,11 @@ public class JwtController {
                     .getObject()
                     .authenticate(tokenBeforeAuth);
 
-
             // Access Token 발급
             String accessToken = jwtProvider.createToken(auth);
 
             // Refresh Token 발급
             String refreshToken = jwtProvider.createToken(auth);
-
 
             // 인증 객체 저장
             SecurityContextHolder.getContext().setAuthentication(auth);
