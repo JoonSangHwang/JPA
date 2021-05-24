@@ -25,4 +25,7 @@ public interface MemberRepository extends JpaRepository<Members, Long> {
             "FROM   Members m                              " +
             "WHERE  m.email= :email                        " )
     long selectUserCount(@Param("email") String email);
+
+
+    Optional<Members> findByEmail(String email);
 }

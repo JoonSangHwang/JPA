@@ -59,102 +59,116 @@ public class JwtFilter extends OncePerRequestFilter {
         String accessToken = resolveAccessToken(httpServletRequest);
         String refreshToken = resolveRefreshToken(httpServletRequest);
 
+        // 토큰 재발급 여부
+        boolean isReissued = false;
 
-        /** Access Token & Refresh Token 유효성 검사 **/
 
+        /**
+         *
+         * Access Token & Refresh Token 유효성 검사
+         *
+         * **/
 
         // Access Token 존재하는 경우
         if (StringUtils.hasText(accessToken) ) {
+            log.info("===== [JS Log] 사용자 '{}' 님의 Access Token 이 발견되었습니다 : '{}' ", request.getAttribute("email"), accessToken);
 
-            // Access Token 유효성 검사
-            String exceptionYn = jwtProvider.validateToken(accessToken);
-            switch(exceptionYn) {
-                case "INVALID_TOKEN" :
-                    request.setAttribute("exception", ErrorCode.INVALID_TOKEN.getCode());
-                    break;
-                case "EXPIRED_TOKEN" :
-                    request.setAttribute("exception", ErrorCode.EXPIRED_TOKEN.getCode());
-                    break;
-                case "UNSUPRT_TOKEN" :
-                    request.setAttribute("exception", ErrorCode.UNSUPRT_TOKEN.getCode());
-                    break;
-                case "ILLEGAL_TOKEN" :
-                    request.setAttribute("exception", ErrorCode.ILLEGAL_TOKEN.getCode());
-                    break;
-                case "EXCPTIN_TOKEN" :
-                    request.setAttribute("exception", ErrorCode.EXCPTIN_TOKEN.getCode());
-                    break;
-                case "" :
+            // Access Token 유효성 검증
+            String exceptionNm = jwtProvider.validateToken(accessToken);
+            if ("".equals(exceptionNm)) {
+                log.info("===== [JS Log] 사용자 '{}' 님이 토큰 유효성 검증을 통과하였습니다.", request.getAttribute("email"));
 
-                    // Access Token Payload 검증
+                // Access Token Payload 검증
 
 
-
-                    // Access Token 만료 시간에 따른 재발급 여부 판단
-
-
+                // 실제로 Access Token 이 만료되지는 않았지만, 만료 시간에 시간이 가까울 경우 재발급 (이거 없어도 될 것 같은데?)
+                if (jwtProvider.whetherTheTokenIsReissued(accessToken)) {
+                    log.info("===== [JS Log] 사용자 '{}' 님의 Access Token 은 재발급 대상 입니다.", request.getAttribute("email"));
+                    isReissued = true;  // 재발급 요청
+                } else {
 
                     // 토큰에서 유저 정보를 가져와 Auth 객체를 만듬
                     Authentication auth2 = jwtProvider.getAuthentication(accessToken);
 
-
+                    // 요청으로 들어온 토큰 그대로 담아 반환
+                    request.setAttribute("AccessTokenData", accessToken);
+                    request.setAttribute("RefreshTokenData", refreshToken);
 
                     // 시큐리티 컨텍스트에 Auth 객체 저장
                     SecurityContextHolder.getContext().setAuthentication(auth2);
-                    log.debug("Security Context 에 '{} 인증 정보를 저장했습니다. URI: {} '", auth2.getName(), requestURI);
-
-                    break;
+                    log.info("===== [JS Log] Security Context 에 '{} 인증 정보를 저장했습니다. URI: {} '", auth2.getName(), requestURI);
+                }
             }
 
+            // Access Token 만료됨
+            else if("EXPIRED_TOKEN".equals(exceptionNm)) {
+                log.info("===== [JS Log] 사용자 '{}' 님의 Access Token 은 만료된 토큰 입니다.", request.getAttribute("email"));
 
+                // Refresh Token 이 존재하는지 확인
+                if (!StringUtils.hasText(refreshToken) ) {
+                    log.info("===== [JS Log] 사용자 '{}' 님의 Refresh Token 을 찾았습니다.", request.getAttribute("email"));
+                    isReissued = true;
+                }
+                // ?
+            }
 
+            // Access Token 유효성 검증 실패
+            else {
+                log.info("===== [JS Log] 사용자 '{}' 님이 토큰 유효성 검증에 실패하였습니다.", request.getAttribute("email"));
+                request.setAttribute("exception", exceptionNm);
+            }
         }
 
         // Access Token [N]  ||  Refresh Token [Y]
         else if (StringUtils.hasText(refreshToken) ) {
+            log.info("===== [JS Log] 사용자 '{}' 님의 Access Token 은 발견하지 못하였으며, Refresh Token 은 발견되었습니다. : '{}' ", request.getAttribute("email"), refreshToken);
 
-            // 만료 기간 체크
-            // 만료 X -> valid
-            // 재발급 go
+            // Refresh Token 유효성 검사
+            String exceptionNm = jwtProvider.validateToken(refreshToken);
+            if ("".equals(exceptionNm)) {
+                log.info("===== [JS Log] 사용자 '{}' 님이 토큰 유효성 검증을 통과하였습니다.", request.getAttribute("email"));
 
-
-            // 만료기간 체크
-            // 만료 O
-            // 재발급 go
-
-
-//            String exceptionYn = jwtProvider.validateToken(refreshToken);
-//            switch(exceptionYn) {
-//                case "INVALID_TOKEN" :
-//                    request.setAttribute("exception", ErrorCode.INVALID_TOKEN.getCode());
-//                    break;
-//                case "EXPIRED_TOKEN" :
-//                    request.setAttribute("exception", ErrorCode.EXPIRED_TOKEN.getCode());
-//                    break;
-//                case "UNSUPRT_TOKEN" :
-//                    request.setAttribute("exception", ErrorCode.UNSUPRT_TOKEN.getCode());
-//                    break;
-//                case "ILLEGAL_TOKEN" :
-//                    request.setAttribute("exception", ErrorCode.ILLEGAL_TOKEN.getCode());
-//                    break;
-//                case "EXCPTIN_TOKEN" :
-//                    request.setAttribute("exception", ErrorCode.EXCPTIN_TOKEN.getCode());
-//                    break;
-//            }
+                // Refresh Token Payload 검증
 
 
-            // Custom Exception 은 Spring 영역, Filter 는 DispatcherServlet 이전 영역의 예외처리
-//            request.setAttribute("exception", ErrorCode.INVALID_TOKEN.getCode());
+                // Refresh Token 을 이용해 Access Token 구하기
+                accessToken = "1";
+
+                // 토큰 담아서 넘겨주기
+                request.setAttribute("AccessTokenData", accessToken);
+                request.setAttribute("RefreshTokenData", refreshToken);
+
+                // 토큰에서 유저 정보를 가져와 Auth 객체를 만듬
+                Authentication auth2 = jwtProvider.getAuthentication(accessToken);
+
+                // 시큐리티 컨텍스트에 Auth 객체 저장
+                SecurityContextHolder.getContext().setAuthentication(auth2);
+                log.debug("Security Context 에 '{} 인증 정보를 저장했습니다. URI: {} '", auth2.getName(), requestURI);
+            }
+
+            // Refresh Token 유효성 검증 실패
+            else {
+                log.info("===== [JS Log] 사용자 '{}' 님이 토큰 유효성 검증에 실패하였습니다.", request.getAttribute("email"));
+                request.setAttribute("exception", ErrorCode.INVALID_TOKEN.getCode());
+            }
         }
 
         // Access Token [N]  ||  Refresh Token [N]
         else {
-            log.info("=======================================");
-            log.info("========= 유효한 JWT 토큰이 없습니다. URI: {} '", requestURI);
-            log.info("========= 신규 토큰 생성 요청 입니다.");
+            log.info("===== [JS Log] 사용자 '{}' 님의 Access Token 과 Refresh Token 둘 다 존재하지 않습니다. : '{}' ", request.getAttribute("email"), refreshToken);
+            log.info("===== [JS Log] 사용자 '{}' 님, 신규 토큰 생성 요청 입니다.", request.getAttribute("email"));
+
+            isReissued = true;
         }
 
-        filterChain.doFilter(request, response);
+        // 토큰 발급을 위한 Controller 이동
+        if (isReissued) {
+            log.info("===== [JS Log] 사용자 '{}' 님, 신규 토큰 및 재발급 요청 입니다.", request.getAttribute("email"));
+            request.getRequestDispatcher("/api/jwtLogin").forward(request, response);
+        } else {
+            log.info("===== [JS Log] 사용자 '{}' 님, 인증 완료 입니다.", request.getAttribute("email"));
+            filterChain.doFilter(request, response);
+        }
     }
 
 
@@ -178,12 +192,4 @@ public class JwtFilter extends OncePerRequestFilter {
 
         return null;
     }
-
-
-
-
-
-
-
-
 }

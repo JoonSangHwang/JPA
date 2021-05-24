@@ -28,11 +28,7 @@ public class LoginController {
         return "login/loginPage";
     }
 
-    @GetMapping("/loginSuccess")
-    public String loginSuccess() {
-        System.out.println("OAuth 2.0 complete !!!!!!!");
-        return "redirect:/board/list";
-    }
+
 
 
     @GetMapping(value = "/signUpPage")

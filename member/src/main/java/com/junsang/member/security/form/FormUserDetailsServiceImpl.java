@@ -3,7 +3,6 @@ package com.junsang.member.security.form;
 import com.junsang.member.dto.ResLogin;
 import com.junsang.member.exception.UserIdNotFoundException;
 import com.junsang.member.repository.MemberRepository;
-import com.junsang.member.security.CustomUSer;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.User;

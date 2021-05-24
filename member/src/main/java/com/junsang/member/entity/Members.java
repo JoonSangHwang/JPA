@@ -1,5 +1,6 @@
 package com.junsang.member.entity;
 
+import com.junsang.member.entity.enumType.RoleType;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,10 +21,10 @@ public class Members {
     private Long seq;                   // 시퀀스
 
     @Column(name = "NM", nullable=false)
-    private String username;                  // 이름
+    private String username;            // 이름
 
-    @Column(name = "pw", nullable=false)
-    private String password;                  // 패스워드
+    @Column(name = "pw", nullable=true)
+    private String password;            // 패스워드
 
     @Column(nullable=false)
     private String email;               // 이메일
@@ -33,4 +34,23 @@ public class Members {
 
     @Column(nullable=true)
     private LocalDateTime lastLoginDt;  // 마지막 로그인 일자
+
+    @Enumerated(EnumType.STRING)
+    @Column
+    private RoleType roleType;
+
+    @Column
+    private String picture;
+
+    public String getRoleType() {
+        return roleType.getRoleType();
+    }
+
+
+    public Members update(String username, String picture) {
+        this.username = username;
+        this.picture = picture;
+
+        return this;
+    }
 }

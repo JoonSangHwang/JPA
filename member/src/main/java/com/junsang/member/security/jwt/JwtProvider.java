@@ -179,7 +179,7 @@ public class JwtProvider implements InitializingBean {
      *
      * @return  true  재발급 받아야함
      */
-    public boolean checkTokenReissuanceYN(String accessToken) {
+    public boolean whetherTheTokenIsReissued(String accessToken) {
         Claims contents = Jwts
                 .parserBuilder()
                 .setSigningKey(key)
@@ -192,6 +192,10 @@ public class JwtProvider implements InitializingBean {
 
         long diff = curExpirationTime.getTime() - curTime.getTime();
         long min = diff / (1000 * 60);  // 분으로 계산
+
+        System.out.println("현재 시각: " + curTime.getTime());
+        System.out.println("현재 시각: " + curExpirationTime.getTime());
+
 
         // 10분 이하
         if (standardTimeForReissuanceOfAccessToken <= min)

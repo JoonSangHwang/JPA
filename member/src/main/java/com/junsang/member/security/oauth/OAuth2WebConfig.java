@@ -14,7 +14,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Component
-public class OAuthWebConfig {
+public class OAuth2WebConfig {
 
     @Bean
     public ClientRegistrationRepository clientRegistrationRepository(OAuth2ClientProperties oAuth2ClientProperties, @Value("${spring.security.oauth2.client.registration.kakao.clientId}") String kakaoClientId) {

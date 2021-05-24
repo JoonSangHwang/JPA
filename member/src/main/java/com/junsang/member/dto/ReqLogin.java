@@ -1,5 +1,6 @@
 package com.junsang.member.dto;
 
+import com.junsang.member.entity.Members;
 import lombok.Data;
 
 import javax.validation.constraints.Email;
@@ -17,4 +18,7 @@ public class ReqLogin {
     @NotNull(message = "Password cannot be null")
     @Size(min = 8, message = "Email not be less than 8 characters")
     private String password;
+
+
+
 }
