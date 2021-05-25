@@ -13,7 +13,7 @@ public class OAuth2Controller {
     }
 
 
-    @GetMapping("/tt2")
+    @GetMapping("/ipa/tt2")
     public String tt2() {
         System.out.println("OAuth 2.0 complete !!!!!!!");
         return "redirect:/board/list";

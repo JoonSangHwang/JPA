@@ -1,4 +1,4 @@
-package com.junsang.member.security.form;
+package com.junsang.member.security;
 
 import com.junsang.member.dto.ResLogin;
 import com.junsang.member.exception.UserIdNotFoundException;
@@ -14,7 +14,7 @@ import javax.persistence.NonUniqueResultException;
 import java.util.ArrayList;
 
 @Service
-public class FormUserDetailsServiceImpl implements FormUserDetailsService {
+public class CmnUserDetailsServiceImpl implements CmnUserDetailsService {
 
     @Autowired
     private MemberRepository memberRepository;
