@@ -18,6 +18,8 @@ public class OAuth2AttributesDTO {
     private String email;
     private String picture;
     private String socialType;
+    private String accessToken;
+    private String refreshToken;
 
     /**
      * OAuth2User 객체가 반환하는 사용자 정보는 Map 형식이라 값 하나하나를 변환하기 위함
@@ -25,9 +27,11 @@ public class OAuth2AttributesDTO {
      * @param registrationId            현재 서비스 구분 코드
      * @param userNameAttributeName     OAuth 2.0 키가 되는 필드
      * @param attributes                유저 정보
+     * @param accessToken
+     * @param refreshToken
      * @return
      */
-    public static OAuth2AttributesDTO of(String registrationId, String userNameAttributeName, Map<String, Object> attributes) {
+    public static OAuth2AttributesDTO of(String registrationId, String userNameAttributeName, Map<String, Object> attributes, String accessToken, String refreshToken) {
 
         // 네이버
         if ("naver".equals(registrationId)) {
@@ -40,6 +44,8 @@ public class OAuth2AttributesDTO {
                     .socialType(registrationId)
                     .attributes(response)
                     .nameAttributeKey(userNameAttributeName)
+                    .accessToken(accessToken)
+                    .refreshToken(refreshToken)
                     .build();
         }
 
@@ -55,6 +61,8 @@ public class OAuth2AttributesDTO {
                     .socialType(registrationId)
                     .attributes(attributes)
                     .nameAttributeKey(userNameAttributeName)
+                    .accessToken(accessToken)
+                    .refreshToken(refreshToken)
                     .build();
         }
 
@@ -68,6 +76,8 @@ public class OAuth2AttributesDTO {
                     .attributes(attributes)                         // attributes -> sub, name, given_name, family_name, picture, email, email_verified, locale
                     .socialType(registrationId)                     // 현재 서비스 구분 코드 -> google
                     .nameAttributeKey(userNameAttributeName)        // OAuth 2.0 키가 되는 필드 -> sub
+                    .accessToken(accessToken)
+                    .refreshToken(refreshToken)
                     .build();
         }
 
