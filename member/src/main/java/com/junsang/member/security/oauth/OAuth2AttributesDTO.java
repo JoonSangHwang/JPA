@@ -43,6 +43,21 @@ public class OAuth2AttributesDTO {
                     .build();
         }
 
+        // 카카오
+        if ("kakao".equals(registrationId)) {
+            Map<String, Object> kakaoAccount = (Map<String, Object>) attributes.get("kakao_account");
+            Map<String, Object> profile = (Map<String, Object>) kakaoAccount.get("profile");
+
+            return OAuth2AttributesDTO.builder()
+                    .name((String) profile.get("nickname"))
+                    .email((String) "카카오는_이메일_안줌ㅠ")
+                    .picture((String) profile.get("thumbnail_image_url"))
+                    .socialType(registrationId)
+                    .attributes(attributes)
+                    .nameAttributeKey(userNameAttributeName)
+                    .build();
+        }
+
         // 구글
         if ("google".equals(registrationId)) {
             return OAuth2AttributesDTO
