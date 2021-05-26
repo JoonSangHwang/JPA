@@ -16,20 +16,33 @@ import java.util.stream.Collectors;
 @Component
 public class OAuth2WebConfig {
 
+    /**
+     * 소셜미디어 (Google/Kakao/Naver/Facebook) 인증 정보르를 InMemory 에 로딩
+     */
     @Bean
-    public ClientRegistrationRepository clientRegistrationRepository(OAuth2ClientProperties oAuth2ClientProperties, @Value("${spring.security.oauth2.client.registration.kakao.clientId}") String kakaoClientId) {
-
-        // getRegistration() 메소드를 사용해 구글과 페이스북의 인증 정보를 빌드
+    public ClientRegistrationRepository clientRegistrationRepository(OAuth2ClientProperties oAuth2ClientProperties,
+                                                                     @Value("${spring.security.oauth2.client.registration.kakao.client-id}") String kakaoClientId,
+                                                                     @Value("${spring.security.oauth2.client.registration.kakao.client-secret}") String kakaoClientSecret,
+                                                                     @Value("${spring.security.oauth2.client.registration.naver.client-id}") String naverClientId,
+                                                                     @Value("${spring.security.oauth2.client.registration.naver.client-secret}") String naverClientSecret) {
+        // 구글과 페이스북의 인증 정보를 빌드
         List<ClientRegistration> registrations = oAuth2ClientProperties.getRegistration().keySet().stream()
                 .map(client -> getRegistration(oAuth2ClientProperties, client))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
-        // 카카오 인증 정보 추가. 실제 요청 시, clientId 만 필요하지만 clientSecret 와 jwtSetUri 가 null 이면 에러나므로 임시 값 부여.
+        // KaKao - 실제 요청 시, clientId 만 필요하지만 clientSecret 와 jwtSetUri 가 null 이면 에러나므로 임시 값 부여.
         registrations.add(CustomOAuth2Provider.KAKAO.getBuilder("kakao")
-                .clientId(kakaoClientId)    // 필수 값
-                .clientSecret("temp")       // 필요 없는 값
-                .jwkSetUri("temp")          // 필요 없는 값
+                .clientId(kakaoClientId)                // 필수 값
+                .clientSecret(kakaoClientSecret)        // 필요 없는 값
+                .jwkSetUri("temp")                      // 필요 없는 값
+                .build());
+
+        // Naver
+        registrations.add(CustomOAuth2Provider.NAVER.getBuilder("naver")
+                .clientId(naverClientId)
+                .clientSecret(naverClientSecret)
+                .jwkSetUri("temp")                      // 필요 없는 값
                 .build());
 
         return new InMemoryClientRegistrationRepository(registrations);

@@ -11,6 +11,7 @@ import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
  */
 public enum CustomOAuth2Provider {
 
+
     KAKAO {
         @Override
         public ClientRegistration.Builder getBuilder(String registrationId) {
@@ -23,7 +24,23 @@ public enum CustomOAuth2Provider {
             builder.clientName("Kakao");
             return builder;
         }
+    },
+
+    NAVER {
+
+        @Override
+        public ClientRegistration.Builder getBuilder(String registrationId) {
+            ClientRegistration.Builder builder = getBuilder(registrationId, ClientAuthenticationMethod.POST, DEFAULT_LOGIN_REDIRECT_URL);
+            builder.scope("profile");
+            builder.authorizationUri("https://nid.naver.com/oauth2.0/authorize");
+            builder.tokenUri("https://nid.naver.com/oauth2.0/token");
+            builder.userInfoUri("https://openapi.naver.com/v1/nid/me");
+            builder.userNameAttributeName("response");
+            builder.clientName("Naver");
+            return builder;
+        }
     };
+
 
     private static final String DEFAULT_LOGIN_REDIRECT_URL = "{baseUrl}/login/oauth2/code/{registrationId}";
 

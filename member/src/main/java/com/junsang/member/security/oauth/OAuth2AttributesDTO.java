@@ -29,6 +29,7 @@ public class OAuth2AttributesDTO {
      */
     public static OAuth2AttributesDTO of(String registrationId, String userNameAttributeName, Map<String, Object> attributes) {
 
+        // 네이버
         if ("naver".equals(registrationId)) {
             Map<String, Object> response = (Map<String, Object>) attributes.get("response");
 
@@ -38,7 +39,7 @@ public class OAuth2AttributesDTO {
                     .picture((String) response.get("profile_image"))
                     .socialType(registrationId)
                     .attributes(response)
-                    .nameAttributeKey("id")
+                    .nameAttributeKey(userNameAttributeName)
                     .build();
         }
 

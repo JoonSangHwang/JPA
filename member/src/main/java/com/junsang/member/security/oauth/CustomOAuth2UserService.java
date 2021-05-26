@@ -50,7 +50,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         // OAuth2UserService 로 가져온 유저 정보를 속성 DTO 에 담음
         OAuth2AttributesDTO attributes = OAuth2AttributesDTO.of(
                 curRegistrationCode,            // 현재 서비스 구분 코드
-                userNameAttributeName,          // OAuth 2.0 키가 되는 필드
+                userNameAttributeName,          // OAuth 2.0 키가 되는 필드 (Google: sub / Naver: respone)
                 oAuth2User.getAttributes());    // 유저 정보
 
         // 저장 또는 수정, (DB 에 정보가 없으면 저장)
