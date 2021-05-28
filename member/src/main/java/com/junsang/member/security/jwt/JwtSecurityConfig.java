@@ -1,6 +1,5 @@
 package com.junsang.member.security.jwt;
 
-import com.junsang.member.security.jwt.JwtFilter;
 import com.junsang.member.security.jwt.JwtProvider;
 import com.junsang.member.security.oauth.CustomOAuth2UserService;
 import org.springframework.beans.factory.annotation.Autowired;
