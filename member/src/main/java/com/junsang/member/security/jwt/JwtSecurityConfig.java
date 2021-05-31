@@ -74,16 +74,7 @@ public class JwtSecurityConfig extends WebSecurityConfigurerAdapter {
 //                .antMatchers("/loginRequest").permitAll();
 //
 //        /** JWT **/
-//        http
-//                // Exception Handling
-//                .exceptionHandling()
-//                .authenticationEntryPoint(jwtAuthEntryPoint)
-//                .accessDeniedHandler(jwtAccessDeniedHandler)
-//
-//                // Session Remove
-//                .and()
-//                .sessionManagement()
-//                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+
 //
 //                // Authenticate Config
 //                .and()
@@ -95,7 +86,17 @@ public class JwtSecurityConfig extends WebSecurityConfigurerAdapter {
         http
                 .antMatcher("/ipa/**").authorizeRequests()
                 .anyRequest().authenticated()
-                .and()
+        .and()
+                // Exception Handling
+                .exceptionHandling()
+                .authenticationEntryPoint(jwtAuthEntryPoint)
+                .accessDeniedHandler(jwtAccessDeniedHandler)
+                // Session Remove
+        .and()
+                .sessionManagement()
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+        .and()
+                // Filter
                 .addFilterBefore(new JwtFilter(jwtProvider), UsernamePasswordAuthenticationFilter.class)
         ;
     }

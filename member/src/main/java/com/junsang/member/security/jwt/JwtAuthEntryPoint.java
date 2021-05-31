@@ -32,45 +32,49 @@ public class JwtAuthEntryPoint implements AuthenticationEntryPoint {
         String exception = (String) request.getAttribute("exception");
         ErrorCode errorCode;
 
-        log.debug("log: exception: {} ", exception);
+        log.info("log: exception: {} ", exception);
 
         // 토큰 없는 경우
         if (exception == null) {
             errorCode = ErrorCode.NON_LOGIN;
             setResponse(response, errorCode);
-            return;
         }
 
         // 토큰 만료된 경우
-        if (exception.equals(ErrorCode.EXPIRED_TOKEN.getCode())) {
+//        else if (exception.equals(ErrorCode.EXPIRED_TOKEN.getCode())) {
+        else if (exception.equals("EXPIRED_TOKEN")) {
             errorCode = ErrorCode.EXPIRED_TOKEN;
             setResponse(response, errorCode);
-            return;
         }
 
         // 토큰 서명 다른 경우
-        if (exception.equals(ErrorCode.INVALID_TOKEN.getCode())) {
+//        else if (exception.equals(ErrorCode.INVALID_TOKEN.getCode())) {
+        else if (exception.equals("INVALID_TOKEN")) {
             errorCode = ErrorCode.INVALID_TOKEN;
             setResponse(response, errorCode);
         }
 
         // 지원되지 않는 JWT 서명 입니다.
-        if (exception.equals(ErrorCode.UNSUPRT_TOKEN.getCode())) {
+//        else if (exception.equals(ErrorCode.UNSUPRT_TOKEN.getCode())) {
+        else if (exception.equals("UNSUPRT_TOKEN")) {
             errorCode = ErrorCode.UNSUPRT_TOKEN;
             setResponse(response, errorCode);
         }
 
         // JWT 토큰이 잘 못 된 경우
-        if (exception.equals(ErrorCode.ILLEGAL_TOKEN.getCode())) {
+//        else if (exception.equals(ErrorCode.ILLEGAL_TOKEN.getCode())) {
+        else if (exception.equals("ILLEGAL_TOKEN")) {
             errorCode = ErrorCode.ILLEGAL_TOKEN;
             setResponse(response, errorCode);
         }
 
         // JWT 오류
-        if (exception.equals(ErrorCode.EXCPTIN_TOKEN.getCode())) {
+//        else if (exception.equals(ErrorCode.EXCPTIN_TOKEN.getCode())) {
+        else if (exception.equals("EXCPTIN_TOKEN")) {
             errorCode = ErrorCode.EXCPTIN_TOKEN;
             setResponse(response, errorCode);
         }
+
     }
 
     /**

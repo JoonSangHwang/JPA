@@ -121,20 +121,23 @@ public class JwtProvider implements InitializingBean {
                     .parseClaimsJws(token);     // 파싱 및 검증, 실패 시 에러
             return result;
         } catch (SecurityException | MalformedJwtException e) {
-            logger.debug("잘못된 JWT 서명 입니다.");
+            logger.info("잘못된 JWT 서명 입니다.");
             result = "INVALID_TOKEN";
         } catch (ExpiredJwtException e) {
-            logger.debug("만료된 JWT 토큰 입니다.");
+            logger.info("만료된 JWT 토큰 입니다.");
             result = "EXPIRED_TOKEN";
         } catch (UnsupportedJwtException e) {
-            logger.debug("지원되지 않는 JWT 서명 입니다.");
+            logger.info("지원되지 않는 JWT 서명 입니다.");
             result = "UNSUPRT_TOKEN";
         } catch (IllegalArgumentException e) {
-            logger.debug("JWT 토큰이 잘 못 되었습니다.");
+            logger.info("JWT 토큰이 잘 못 되었습니다.");
             result = "ILLEGAL_TOKEN";
         }
-//        catch (Exception e) {
-//            logger.debug("JWT 오류 입니다.");
+//        catch (NullPointerException e) {
+//            logger.info("JWT 토큰이 존재하지 않습니다.");
+//            result = "NON_LOGIN";
+//        } catch (Exception e) {
+//            logger.info("JWT 오류 입니다.");
 //            result = "EXCPTIN_TOKEN";
 //        }
 
@@ -171,6 +174,17 @@ public class JwtProvider implements InitializingBean {
                 .build()
                 .parseClaimsJws(jwtToken)
                 .getBody();
+    }
+
+    public String getTokenUUID(String jwtToken) {
+        Claims contents = Jwts
+                .parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(jwtToken)
+                .getBody();
+
+        return (String) contents.get("UUID");
     }
 
 

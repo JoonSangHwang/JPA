@@ -26,9 +26,6 @@ dependencies {
 	// Jsaypt
 	compile "com.github.ulisesbocchio:jasypt-spring-boot-starter:1.17"
 
-	// Bootstrap
-	implementation 'org.springframework.cloud:spring-cloud-starter-bootstrap'
-
 	// Lombok
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'

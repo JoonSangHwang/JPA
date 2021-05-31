@@ -20,7 +20,8 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'						// Web
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'					// JPA
 	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'					// Thymeleaf
-	implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity5'					// Security Thymeleaf
+	implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity5'
+	implementation 'junit:junit:4.12'// Security Thymeleaf
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'							// Devtools
 	runtimeOnly 'com.h2database:h2'															// H2
 	implementation 'org.springframework.boot:spring-boot-starter-security'					// Security
@@ -35,6 +36,7 @@ dependencies {
 	implementation 'org.modelmapper:modelmapper:2.3.8'										// ModelMapper
 	implementation 'org.springframework.boot:spring-boot-starter-aop'						// AOP
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'				// Redis
+	implementation 'org.springframework.boot:spring-boot-starter-hateoas'					// Hateoas
 
 	// JWT
 	compile 'io.jsonwebtoken:jjwt-api:0.11.2'
