@@ -61,15 +61,8 @@ public class JwtController {
     }
 
 
-    @PostMapping("/api/jwtLogin")
-    public ResponseEntity<JwtTokenDto> reissued(@RequestBody ReqLogin reqLogin) {
-
-//        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-
-        HttpHeaders httpHeaders = new HttpHeaders();
-
-//        String username = principal.toString();
-        logger.info("[JS LOG] Security Context 에 인증 정보가 없습니다. {}", reqLogin.getEmail());
+    @PostMapping("/api/tokenIssuance")
+    public ResponseEntity<JwtTokenDto> tokenReissued(@RequestBody ReqLogin reqLogin) {
 
         // 토큰 생성
         UsernamePasswordAuthenticationToken tokenBeforeAuth = new UsernamePasswordAuthenticationToken(
@@ -83,36 +76,29 @@ public class JwtController {
                 .getObject()
                 .authenticate(tokenBeforeAuth);
 
+
+
+        String uuid = String.valueOf(UUID.randomUUID());
         // Access Token 발급
-        String accessToken = jwtProvider.createToken(auth);
+        String accessToken = jwtProvider.createToken(auth, uuid);
 
         // Refresh Token 발급
-        String refreshToken = jwtProvider.createToken(auth);
+        String refreshToken = jwtProvider.createToken(auth, uuid);
+
+        jwtProvider.tokenSaveInCache(accessToken, refreshToken, uuid);
 
         // 인증 객체 저장
         SecurityContextHolder.getContext().setAuthentication(auth);
 
-        tokenCacheSave(accessToken, refreshToken);
+
 
         // 클라이언트에게 반환
+        HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add("accessToken", "Bearer " + accessToken);
         httpHeaders.add("refreshToken", "Bearer " + refreshToken);
 
         return new ResponseEntity<>(new JwtTokenDto(accessToken, refreshToken), httpHeaders, HttpStatus.OK);
     }
 
-    @Cacheable(key = "#uuid", value = "memberAuth")
-    private void tokenCacheSave(String accessToken, String refreshToken) {
 
-        String uuid = String.valueOf(UUID.randomUUID());
-
-        TokenEntity tokenEntity = TokenEntity.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .uuid(uuid)
-                .usableYn("Y")
-                .build();
-
-         tokenRepository.save(tokenEntity);
-    }
 }

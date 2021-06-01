@@ -1,5 +1,7 @@
 package com.junsang.member.security.jwt;
 
+import com.junsang.member.entity.TokenEntity;
+import com.junsang.member.repository.TokenRepository;
 import com.junsang.member.security.jwt.exception.ErrorCode;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
@@ -7,13 +9,13 @@ import io.jsonwebtoken.security.Keys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.security.Key;
 import java.util.ArrayList;
 import java.util.Date;
@@ -37,6 +39,8 @@ public class JwtProvider implements InitializingBean {
     private final int standardTimeForReissuanceOfRefreshToken = 10;
 
 
+    @Autowired
+    private TokenRepository tokenRepository;
 
 
 
@@ -184,16 +188,16 @@ public class JwtProvider implements InitializingBean {
                 .parseClaimsJws(jwtToken)
                 .getBody();
 
-        return (String) contents.get("UUID");
+        return (String) contents.get("uuid");
     }
 
 
     /**
-     * Access Token 의 만료 일자를 보고 재발급 해주어야 하는지 체크
+     * 토큰의 만료 일자를 확인하여 만기 일자가 가깝다면, 재발급
      *
-     * @return  true  재발급 받아야함
+     * @return true: 정상 / false: 재발행
      */
-    public boolean whetherTheTokenIsReissued(String accessToken) {
+    public boolean isReissued(String accessToken) {
         Claims contents = Jwts
                 .parserBuilder()
                 .setSigningKey(key)
@@ -207,15 +211,97 @@ public class JwtProvider implements InitializingBean {
         long diff = curExpirationTime.getTime() - curTime.getTime();
         long min = diff / (1000 * 60);  // 분으로 계산
 
-        System.out.println("현재 시각: " + curTime.getTime());
-        System.out.println("현재 시각: " + curExpirationTime.getTime());
-
-
-        // 10분 이하
-        if (standardTimeForReissuanceOfAccessToken <= min)
-            return false;
-
-        return true;
+        // 재발행 여부
+        return standardTimeForReissuanceOfAccessToken <= min;
     }
 
+    public String createToken(Authentication auth, String uuid) {
+        Map<String, Object> headers = new HashMap<>();
+        headers.put("js_header", "JS Header");
+
+        Map<String, Object> payloads = new HashMap<>();
+        payloads.put("email", auth.getName());
+        payloads.put("uuid", uuid);
+
+        String subject  = "용도는 인증";
+        String issuer   = "발급자는 준상";
+        String audience = "대상자는 미정";
+
+        // 토큰 생성
+        return Jwts
+                .builder()
+                .setHeader(headers)             // Headers 설정
+                .setClaims(payloads)            // Claims 설정
+                .setSubject(subject)
+                .setIssuer(issuer)
+                .setAudience(audience)
+                .setExpiration(new Date(System.currentTimeMillis() + Long.parseLong(jwtTokenExpirationTime)))
+                .setNotBefore(new Date(System.currentTimeMillis()))     // 토큰 활성 시간
+                .setIssuedAt(new Date(System.currentTimeMillis()))      // 토큰 발급 시간
+                .signWith(key, SignatureAlgorithm.HS512)                // HS512와 Key 로 Sign 서명
+                .compact();                                             // 토큰 생성
+    }
+
+
+    /**
+     * JWT 토큰의 Payload 검증
+     *
+     * @param reqToken      토큰 값
+     * @param tokenType     토큰 구분 값
+     */
+    public boolean payLoadValid(String reqToken, String tokenType) {
+
+        // 토큰 속의 UUID 가져오기
+        String tokenUUID = getTokenUUID(reqToken);
+        if (tokenUUID == null)
+            return false;
+
+        // 토큰 검색
+        TokenEntity tokenEntity = tokenSearchInCache(tokenUUID);
+        if (tokenEntity == null)
+            return false;
+
+        // 사용 가능한 토큰인지 체크
+        String tokenUsable = tokenEntity.getUsableYn();
+        if ("N".equals(tokenUsable))
+            return false;
+
+        // 현재 요청 토큰과 캐시에 존재하는 토큰이 같은지 검증
+        String tokenVal = "ACCESS".equals(tokenType)
+                ? tokenEntity.getAccessToken()
+                : tokenEntity.getRefreshToken();
+        return reqToken.equals(tokenVal);
+    }
+
+
+    /**
+     * 캐시(Redis)에 저장 되어 있는 JWT 토큰 검색
+     *
+     * @param uuid          UUID in Token
+     */
+    @Cacheable(key = "#uuid", value = "memberAuth")
+    public TokenEntity tokenSearchInCache(String uuid) {
+        return tokenRepository
+                .findById(uuid)
+                .orElse(null);
+    }
+
+    /**
+     * 캐시(Redis)에 JWT 토큰 저장
+     *
+     * @param accessToken       접근 토큰
+     * @param refreshToken      갱신 토큰
+     * @param uuid              토큰 판별 값
+     */
+    @Cacheable(key = "#uuid", value = "memberAuth")
+    public void tokenSaveInCache(String accessToken, String refreshToken, String uuid) {
+        TokenEntity tokenEntity = TokenEntity.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .uuid(uuid)
+                .usableYn("Y")
+                .build();
+
+        tokenRepository.save(tokenEntity);
+    }
 }
