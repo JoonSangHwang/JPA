@@ -18,12 +18,12 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.UUID;
 
@@ -50,7 +50,7 @@ public class JwtController {
 
 
     @PostMapping("/ipa/jwtLogin")
-    public ResponseEntity<JwtTokenDto> authorize(@RequestBody ReqLogin reqLogin, HttpServletRequest request) {
+    public ResponseEntity<JwtTokenDto> authorize(@RequestBody ReqLogin reqLogin, HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
         HttpHeaders httpHeaders = new HttpHeaders();
 
@@ -100,5 +100,31 @@ public class JwtController {
         return new ResponseEntity<>(new JwtTokenDto(accessToken, refreshToken), httpHeaders, HttpStatus.OK);
     }
 
+    @RequestMapping("/ipa/move")
+    public String aaa(HttpServletRequest request) {
+
+        String accessToken = (String) request.getAttribute("AccessTokenData");
+        Authentication authentication = jwtProvider.getAuthentication(accessToken);
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        return request.getRequestURI();
+    }
+
+
+    @GetMapping("/ipa/test01")
+    public ResponseEntity<JwtTokenDto> test01(@RequestBody ReqLogin reqLogin, HttpServletRequest request) {
+
+
+
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PostMapping("/ipa/test02")
+    public ResponseEntity<JwtTokenDto> test02(@RequestBody ReqLogin reqLogin, HttpServletRequest request) {
+
+
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
 
 }

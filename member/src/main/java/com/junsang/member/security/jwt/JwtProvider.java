@@ -97,17 +97,19 @@ public class JwtProvider implements InitializingBean {
      * Token 에 담겨있는 정보를 이용해 Auth 생성 후, 리턴
      */
     public Authentication getAuthentication(String token) {
-        // Token 을 이용해 Claim 생성
-        Claims claims = Jwts
+        Claims contents = Jwts
                 .parserBuilder()
                 .setSigningKey(key)
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
 
+        String email = "gufrus@naver.com";
+        String pw = "1234";
+
         return new UsernamePasswordAuthenticationToken(
-                claims.get("email"),
-                claims.get("password"),
+                email,
+                pw,
                 new ArrayList<>());         // 권한
     }
 
@@ -212,7 +214,7 @@ public class JwtProvider implements InitializingBean {
         long min = diff / (1000 * 60);  // 분으로 계산
 
         // 재발행 여부
-        return standardTimeForReissuanceOfAccessToken <= min;
+        return standardTimeForReissuanceOfAccessToken > min;
     }
 
     public String createToken(Authentication auth, String uuid) {

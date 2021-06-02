@@ -33,6 +33,7 @@ public class CmnUserDetailsServiceImpl implements CmnUserDetailsService {
         if (userInfo == null)
             throw new UserIdNotFoundException("존재하지 않는 이메일 입니다");
 
+        // 비밀번호 매칭 로직
 
 
         User user = new User( userInfo.getEmail()

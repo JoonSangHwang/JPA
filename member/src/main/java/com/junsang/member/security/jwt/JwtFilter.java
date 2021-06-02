@@ -4,7 +4,11 @@ import com.junsang.member.security.jwt.exception.ErrorMessage;
 import com.junsang.member.security.jwt.exception.ReissuanceException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -14,8 +18,10 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * 요청 흐름
@@ -34,13 +40,14 @@ import java.util.Map;
 @Slf4j
 public class JwtFilter extends OncePerRequestFilter {
 
-    private final String AUTHORITIES_ACCESS_TOKEN_HEADER  = "AuthHeader";
-    private final String AUTHORITIES_REFRESH_TOKEN_HEADER = "refreshTokenHeader";
+    private static final String AUTHORITIES_ACCESS_TOKEN_HEADER  = "AuthHeader";
+    private static final String AUTHORITIES_REFRESH_TOKEN_HEADER = "refreshTokenHeader";
+
 
     @Autowired
-    private JwtException jwtException;
+    private AuthenticationManagerBuilder authenticationManagerBuilder;
 
-    private JwtProvider jwtProvider;
+    private final JwtProvider jwtProvider;
 
     public JwtFilter(JwtProvider jwtProvider) {
         this.jwtProvider = jwtProvider;
@@ -59,23 +66,63 @@ public class JwtFilter extends OncePerRequestFilter {
         boolean isValid = accessTokenValidate(accessToken, refreshToken, request);
 
 
+
+
+
         // 정상 토큰
         if (isValid) {
             // 토큰에서 유저 정보를 가져와 Auth 객체를 만듬
-            Authentication auth2 = jwtProvider.getAuthentication(accessToken);
+            Authentication auth = jwtProvider.getAuthentication(accessToken);
 
             // 요청으로 들어온 토큰 그대로 담아 반환
             request.setAttribute("AccessTokenData", accessToken);
             request.setAttribute("RefreshTokenData", refreshToken);
 
             // 시큐리티 컨텍스트에 Auth 객체 저장
-            SecurityContextHolder.getContext().setAuthentication(auth2);
-
+            SecurityContextHolder.getContext().setAuthentication(auth);
             filterChain.doFilter(request, response);
+
         }
 
-        // 비정상 토큰
+
+//        else if("/ipa/jwtLogin".equals(request.getRequestURI())) {
+//
+//            // 토큰 생성
+//            UsernamePasswordAuthenticationToken tokenBeforeAuth = new UsernamePasswordAuthenticationToken(
+//                    request.getAttribute("email")
+//                    , request.getAttribute("password")
+//                    , new ArrayList<>()
+//            );
+//
+//            // 토큰을 매니저에게 인증 위임 => loadUserByUsername() 실행하러 go
+//            Authentication auth = authenticationManagerBuilder
+//                    .getObject()
+//                    .authenticate(tokenBeforeAuth);
+//
+//            String uuid = String.valueOf(UUID.randomUUID());
+//            // Access Token 발급
+//            String at = jwtProvider.createToken(auth, uuid);
+//
+//            // Refresh Token 발급
+//            String rt = jwtProvider.createToken(auth, uuid);
+//
+//            jwtProvider.tokenSaveInCache(accessToken, refreshToken, uuid);
+//
+//            // 인증 객체 저장
+//            SecurityContextHolder.getContext().setAuthentication(auth);
+//
+//        }
+
+
+        /**
+         * 비정상 토큰
+         * - 토큰이 없는 사용자: DB 조회
+         */
         else {
+
+            // 에러
+
+
             request.getRequestDispatcher("/api/tokenIssuance").forward(request, response);
         }
     }
@@ -91,11 +138,8 @@ public class JwtFilter extends OncePerRequestFilter {
         String bearerAccessToken = request.getHeader(AUTHORITIES_ACCESS_TOKEN_HEADER);
         if (StringUtils.hasText(bearerAccessToken) && bearerAccessToken.startsWith("Bearer "))
             tokenInfo.put("accessToken", bearerAccessToken.substring(7));
-        else {
+        else
             tokenInfo.put("accessToken", null);
-            throw new ReissuanceException(ErrorCode.UNSUPRT_TOKEN);
-        }
-
 
         // 리프레시 토큰 추출
         String bearerRefreshToken = request.getHeader(AUTHORITIES_REFRESH_TOKEN_HEADER);
@@ -104,14 +148,12 @@ public class JwtFilter extends OncePerRequestFilter {
         else
             tokenInfo.put("refreshToken", null);
 
-
-
-
         return tokenInfo;
     }
 
 
     /**
+     * 접근 토큰 검증
      *
      * @param accessToken       접근 토큰
      * @param refreshToken      갱신 토큰
@@ -125,18 +167,14 @@ public class JwtFilter extends OncePerRequestFilter {
         if (!StringUtils.hasText(accessToken))
             return refreshTokenValidate(refreshToken, request);
 
-
         // Access Token 유효성 검증
         String validateResult = jwtProvider.validateToken(accessToken);
         if ("EXPIRED_TOKEN".equals(validateResult))     //= 만료된 토큰
             return refreshTokenValidate(refreshToken, request);
-        else if ("NON_LOGIN".equals(validateResult))    //= 토큰 없음
-            return false;
         else if (!"".equals(validateResult)) {          //= 비정상 토큰
             request.setAttribute("exception", validateResult);      // 에러
             return false;
         }
-
 
         // 토큰 Payload 검증
         if (!jwtProvider.payLoadValid(accessToken, "ACCESS"))
@@ -151,6 +189,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
 
     /**
+     * 갱신 토큰 검증
      *
      * @param refreshToken      갱신 토큰
      * @param request           요청
@@ -165,9 +204,9 @@ public class JwtFilter extends OncePerRequestFilter {
 
         // Refresh Token 유효성 검증
         String validateResult = jwtProvider.validateToken(refreshToken);
-        if ("EXPIRED_TOKEN".equals(validateResult))     // 만료된 토큰
+        if ("EXPIRED_TOKEN".equals(validateResult))     //= 만료된 토큰
             return false;
-        else if (!"".equals(validateResult)) {           // 비정상 토큰
+        else if (!"".equals(validateResult)) {          // 비정상 토큰
             request.setAttribute("exception", validateResult);      // 에러
             return false;
         }
@@ -182,202 +221,4 @@ public class JwtFilter extends OncePerRequestFilter {
 
         return true;
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//
-//
-//    /**
-//     * 토큰 유효성 검사
-//     */
-//    private boolean tokenValid(String accessToken, String refreshToken, HttpServletRequest request) {
-//
-//        // Access Token [O]  ||  Refresh Token [O],[X]
-//        if (StringUtils.hasText(accessToken) ) {
-//            return accessTokenLogic(accessToken, refreshToken, request);
-//        }
-//
-//        // Access Token [X]  ||  Refresh Token [O]
-//        else if (StringUtils.hasText(refreshToken) ) {
-//            return refreshTokenLogic(refreshToken, request);
-//        }
-//
-//        // Access Token [X]  ||  Refresh Token [X]
-//        else {
-//            log.info("===== [JS Log] 사용자 '{}' 님의 Access Token 과 Refresh Token 둘 다 존재하지 않습니다. : '{}' ", request.getAttribute("email"), refreshToken);
-//            log.info("===== [JS Log] 사용자 '{}' 님, 신규 토큰 생성 요청 입니다.", request.getAttribute("email"));
-//
-//            return true;
-//        }
-//    }
-//
-//
-//
-
-//
-//
-//    private boolean accessTokenLogic(String accessToken, String refreshToken, HttpServletRequest request) {
-//        log.info("===== [JS Log] 사용자 '{}' 님의 Access Token 이 발견되었습니다 : '{}' ", request.getAttribute("email"), accessToken);
-//
-//        // Access Token 유효성 검증
-//        String exceptionNm = jwtProvider.validateToken(accessToken);
-//
-//        // 정상 Access Token
-//        if ("".equals(exceptionNm)) {
-//            log.info("===== [JS Log] 사용자 '{}' 님이 토큰 유효성 검증을 통과하였습니다.", request.getAttribute("email"));
-//
-//
-//            // Access Token Payload 검증
-//
-//
-//            // [재발급] 실제로 Access Token 이 만료되지는 않았지만, 만료 시간에 시간이 가까울 경우
-//            if (jwtProvider.whetherTheTokenIsReissued(accessToken)) {
-//                log.info("===== [JS Log] 사용자 '{}' 님의 Access Token 은 재발급 대상 입니다.", request.getAttribute("email"));
-//                return true;
-//            } else {
-//
-//                // 토큰에서 유저 정보를 가져와 Auth 객체를 만듬
-//                Authentication auth2 = jwtProvider.getAuthentication(accessToken);
-//
-//                // 요청으로 들어온 토큰 그대로 담아 반환
-//                request.setAttribute("AccessTokenData", accessToken);
-//                request.setAttribute("RefreshTokenData", refreshToken);
-//
-//                // 시큐리티 컨텍스트에 Auth 객체 저장
-//                SecurityContextHolder.getContext().setAuthentication(auth2);
-//                log.info("===== [JS Log] Security Context 에 '{} 인증 정보를 저장했습니다. URI: {} '", auth2.getName(), request.getRequestURI());
-//            }
-//        }
-//
-//        // 만료 Access Token
-//        else if("EXPIRED_TOKEN".equals(exceptionNm)) {
-//            log.info("===== [JS Log] 사용자 '{}' 님의 Access Token 은 만료된 토큰 입니다.", request.getAttribute("email"));
-//
-////            refreshTokenValid();
-//
-//            // Refresh Token 존재함
-//            if (StringUtils.hasText(refreshToken) ) {
-//
-//
-//                String exception2 = jwtProvider.validateToken(refreshToken);
-//                if ("".equals(exception2)) {
-//
-//                }
-//
-//
-//                // [재발급]
-//                else if("EXPIRED_TOKEN".equals(exception2)) {
-//                    return true;
-//                }
-//
-//                // Refresh Token 유효성 검증 실패
-//                else {
-//
-//                }
-//
-//            }
-//
-//            // Refresh Token 존재하지 않음
-//            else {
-//                log.info("===== [JS Log] 사용자 '{}' 님의 Refresh Token 을 찾지 못했습니다.", request.getAttribute("email"));
-//                return true;
-//            }
-//            // ?
-//        }
-//
-//        // 비정상 Access Token
-//        else {
-//            log.info("===== [JS Log] 사용자 '{}' 님이 토큰 유효성 검증에 실패하였습니다.", request.getAttribute("email"));
-//            request.setAttribute("exception", exceptionNm);
-//        }
-//
-//        return false;
-//    }
-//
-//
-//    private void refreshTokenValid(String refreshToken, HttpServletRequest request) {
-//        log.info("===== [JS Log] 사용자 '{}' 님의 Access Token 이 존재하지 않습니다.", request.getAttribute("email"));
-//
-//
-//
-//
-//    }
-//
-//    private boolean refreshTokenLogic(String refreshToken, HttpServletRequest request) {
-//        log.info("===== [JS Log] 사용자 '{}' 님의 Access Token 은 발견하지 못하였으며, Refresh Token 은 발견되었습니다. : '{}' ", request.getAttribute("email"), refreshToken);
-//
-//        // Refresh Token 유효성 검사
-//        String exceptionNm = jwtProvider.validateToken(refreshToken);
-//        if ("".equals(exceptionNm)) {
-//            log.info("===== [JS Log] 사용자 '{}' 님이 토큰 유효성 검증을 통과하였습니다.", request.getAttribute("email"));
-//
-//            // Refresh Token Payload 검증
-//
-//
-//            // Refresh Token 을 이용해 Access Token 구하기
-//            String accessToken = "1";
-//
-//            // 토큰 담아서 넘겨주기
-//            request.setAttribute("AccessTokenData", accessToken);
-//            request.setAttribute("RefreshTokenData", refreshToken);
-//
-//            // 토큰에서 유저 정보를 가져와 Auth 객체를 만듬
-//            Authentication auth2 = jwtProvider.getAuthentication(accessToken);
-//
-//            // 시큐리티 컨텍스트에 Auth 객체 저장
-//            SecurityContextHolder.getContext().setAuthentication(auth2);
-//            log.debug("Security Context 에 '{} 인증 정보를 저장했습니다. URI: {} '", auth2.getName(), request.getRequestURI());
-//        }
-//
-//        // Refresh Token 유효성 검증 실패
-//        else {
-//            log.info("===== [JS Log] 사용자 '{}' 님이 토큰 유효성 검증에 실패하였습니다.", request.getAttribute("email"));
-//            request.setAttribute("exception", ErrorCode.INVALID_TOKEN.getCode());
-//        }
-//
-//        return false;
-//    }
-//
-//
-//
-//
-//    private void resolveRequest(boolean isReissued, HttpServletRequest request, HttpServletResponse response, FilterChain filterChain, String accessToken, String refreshToken) throws ServletException, IOException {
-//
-//        if (isReissued) {
-//            log.info("===== [JS Log] 사용자 '{}' 님, 신규 토큰 및 재발급 요청 입니다.", request.getAttribute("email"));
-//            request.getRequestDispatcher("/api/jwtLogin").forward(request, response);
-//        }
-//
-//
-//        // 토큰에서 유저 정보를 가져와 Auth 객체를 만듬
-//        Authentication auth2 = jwtProvider.getAuthentication(accessToken);
-//
-//        // 요청으로 들어온 토큰 그대로 담아 반환
-//        request.setAttribute("AccessTokenData", accessToken);
-//        request.setAttribute("RefreshTokenData", refreshToken);
-//
-//        // 시큐리티 컨텍스트에 Auth 객체 저장
-//        SecurityContextHolder.getContext().setAuthentication(auth2);
-//        log.info("===== [JS Log] Security Context 에 '{} 인증 정보를 저장했습니다. URI: {} '", auth2.getName(), request.getRequestURI());
-//
-//
-//        log.info("===== [JS Log] 사용자 '{}' 님, 인증 완료 입니다.", request.getAttribute("email"));
-//        filterChain.doFilter(request, response);
-//    }
 }
