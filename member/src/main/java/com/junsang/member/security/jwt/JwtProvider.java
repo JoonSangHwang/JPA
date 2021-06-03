@@ -2,7 +2,6 @@ package com.junsang.member.security.jwt;
 
 import com.junsang.member.entity.TokenEntity;
 import com.junsang.member.repository.TokenRepository;
-import com.junsang.member.security.jwt.exception.ErrorCode;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -305,5 +304,47 @@ public class JwtProvider implements InitializingBean {
                 .build();
 
         tokenRepository.save(tokenEntity);
+    }
+
+
+
+
+    /**
+     * JWT 토큰의 Payload 검증
+     *
+     */
+    public void changeNewToken(String token, String newToken) {
+
+        // 토큰 속의 UUID 가져오기
+        String tokenUUID = getTokenUUID(token);
+
+        // 토큰 검색
+        TokenEntity tokenEntity = tokenUpdateInCache(tokenUUID, newToken);
+    }
+
+
+    /**
+     * 수정
+     */
+    @Cacheable(key = "#uuid", value = "memberAuth")
+    public TokenEntity tokenUpdateInCache(String uuid, String newToken) {
+
+        TokenEntity info = tokenRepository
+                .findById(uuid)
+                .orElse(null);
+
+        String curUsableYn = info.getUsableYn();
+        if ("Y".equals(curUsableYn)) {
+            info.usableUpdate("N");
+        }
+
+
+        info.changeAccessToken(newToken);
+
+
+
+        tokenRepository.save(info);
+
+        return info;
     }
 }

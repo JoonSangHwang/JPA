@@ -23,4 +23,8 @@ public class TokenEntity {
     public void usableUpdate(String flag) {
         this.usableYn = flag;
     }
+
+    public void changeAccessToken(String newAccessToken) {
+        this.accessToken = newAccessToken;
+    }
 }

@@ -1,7 +1,6 @@
 package com.junsang.member.security.jwt;
 
-import com.junsang.member.security.jwt.exception.ErrorCode;
-import com.junsang.member.security.jwt.exception.ErrorMessage;
+import com.junsang.member.security.exception.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;

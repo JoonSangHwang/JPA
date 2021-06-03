@@ -1,14 +1,8 @@
 package com.junsang.member.security.jwt;
-import com.junsang.member.security.jwt.exception.ErrorCode;
-import com.junsang.member.security.jwt.exception.ErrorMessage;
-import com.junsang.member.security.jwt.exception.ReissuanceException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -18,7 +12,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -43,7 +36,6 @@ public class JwtFilter extends OncePerRequestFilter {
     private static final String AUTHORITIES_ACCESS_TOKEN_HEADER  = "AuthHeader";
     private static final String AUTHORITIES_REFRESH_TOKEN_HEADER = "refreshTokenHeader";
 
-
     @Autowired
     private AuthenticationManagerBuilder authenticationManagerBuilder;
 
@@ -66,57 +58,26 @@ public class JwtFilter extends OncePerRequestFilter {
         boolean isValid = accessTokenValidate(accessToken, refreshToken, request);
 
 
-
-
-
         // 정상 토큰
         if (isValid) {
             // 토큰에서 유저 정보를 가져와 Auth 객체를 만듬
             Authentication auth = jwtProvider.getAuthentication(accessToken);
 
             // 요청으로 들어온 토큰 그대로 담아 반환
-            request.setAttribute("AccessTokenData", accessToken);
+            if (request.getAttribute("AccessTokenData") == null)
+                request.setAttribute("AccessTokenData", accessToken);
+
             request.setAttribute("RefreshTokenData", refreshToken);
 
             // 시큐리티 컨텍스트에 Auth 객체 저장
             SecurityContextHolder.getContext().setAuthentication(auth);
             filterChain.doFilter(request, response);
-
         }
-
-
-//        else if("/ipa/jwtLogin".equals(request.getRequestURI())) {
-//
-//            // 토큰 생성
-//            UsernamePasswordAuthenticationToken tokenBeforeAuth = new UsernamePasswordAuthenticationToken(
-//                    request.getAttribute("email")
-//                    , request.getAttribute("password")
-//                    , new ArrayList<>()
-//            );
-//
-//            // 토큰을 매니저에게 인증 위임 => loadUserByUsername() 실행하러 go
-//            Authentication auth = authenticationManagerBuilder
-//                    .getObject()
-//                    .authenticate(tokenBeforeAuth);
-//
-//            String uuid = String.valueOf(UUID.randomUUID());
-//            // Access Token 발급
-//            String at = jwtProvider.createToken(auth, uuid);
-//
-//            // Refresh Token 발급
-//            String rt = jwtProvider.createToken(auth, uuid);
-//
-//            jwtProvider.tokenSaveInCache(accessToken, refreshToken, uuid);
-//
-//            // 인증 객체 저장
-//            SecurityContextHolder.getContext().setAuthentication(auth);
-//
-//        }
 
 
         /**
          * 비정상 토큰
-         * - 토큰이 없는 사용자: DB 조회
+         * - 토큰이 없는 사용자
          */
         else {
 
@@ -218,6 +179,13 @@ public class JwtFilter extends OncePerRequestFilter {
         // 토큰의 만료 일자를 확인하여 만기 일자가 가깝다면, 재발급
         if (jwtProvider.isReissued(refreshToken))
             return false;
+
+        // Refresh Token 으로 Access Token 새로 갱신
+        Authentication auth = jwtProvider.getAuthentication(refreshToken);
+        String uuid = String.valueOf(UUID.randomUUID());
+        String newAccessToken = jwtProvider.createToken(auth, uuid);
+        jwtProvider.changeNewToken(refreshToken, newAccessToken);
+        request.setAttribute("AccessTokenData", newAccessToken);
 
         return true;
     }

@@ -3,6 +3,8 @@ package com.junsang.member.security.jwt;
 import com.junsang.member.dto.ReqLogin;
 import com.junsang.member.entity.TokenEntity;
 import com.junsang.member.repository.TokenRepository;
+import com.junsang.member.security.exception.ErrorCode;
+import com.junsang.member.security.exception.LoginStepException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +12,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
@@ -25,6 +28,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -72,9 +77,7 @@ public class JwtController {
         );
 
         // 토큰을 매니저에게 인증 위임 => loadUserByUsername() 실행하러 go
-        Authentication auth = authenticationManagerBuilder
-                .getObject()
-                .authenticate(tokenBeforeAuth);
+        Authentication auth = authenticationManagerBuilder.getObject().authenticate(tokenBeforeAuth);
 
 
 

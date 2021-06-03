@@ -1,6 +1,6 @@
 package com.junsang.member.security.jwt;
 
-import com.junsang.member.security.jwt.exception.ErrorCode;
+import com.junsang.member.security.exception.ErrorCode;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.stereotype.Component;
